@@ -1,0 +1,20 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Local app storage/cache
+.gemini/
+brain/

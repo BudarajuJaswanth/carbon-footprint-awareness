@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EcoTrace — Calculate, track, and reduce your personal carbon footprint with personalized insights and goals.">
+  <meta name="theme-color" content="#090d16">
+  <title>EcoTrace | Carbon Footprint Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design Tokens ── */
+    :root {
+      --bg:      #090d16;
+      --bg2:     #0f172a;
+      --bg3:     #1e293b;
+      --card:    rgba(30,41,59,0.85);
+      --border:  rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.16);
+      --t1: #f8fafc; --t2: #94a3b8; --t3: #64748b;
+      --primary: #10b981; --primary-h: #059669; --primary-g: rgba(16,185,129,0.15);
+      --accent:  #06b6d4; --accent-g:  rgba(6,182,212,0.15);
+      --warn:    #f59e0b; --warn-g:    rgba(245,158,11,0.15);
+      --danger:  #ef4444; --danger-g:  rgba(239,68,68,0.15);
+      --info:    #3b82f6;
+      --sidebar: 248px;
+      --radius:  14px; --radius-sm: 8px;
+      --font:    'Inter', system-ui, sans-serif;
+      --font-h:  'Outfit', sans-serif;
+      --shadow:  0 10px 30px rgba(0,0,0,0.45);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    [data-theme="light"] {
+      --bg: #f1f5f9; --bg2: #ffffff; --bg3: #e2e8f0;
+      --card: rgba(255,255,255,0.92);
+      --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.18);
+      --t1: #0f172a; --t2: #475569; --t3: #94a3b8;
+      --primary: #059669; --primary-h: #047857; --primary-g: rgba(5,150,105,0.12);
+      --accent: #0891b2; --accent-g: rgba(8,145,178,0.12);
+      --warn: #d97706; --warn-g: rgba(217,119,6,0.12);
+      --danger: #dc2626; --danger-g: rgba(220,38,38,0.12);
+      --shadow: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--t1); min-height: 100vh; overflow-x: hidden; transition: background .3s, color .3s; }
+    ul { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+    img { max-width: 100%; display: block; }
+    h1,h2,h3,h4 { font-family: var(--font-h); line-height: 1.25; color: var(--t1); }
+
+    /* ── Skip link (WCAG 2.4.1) ── */
+    .skip-link {
+      position: absolute; top: -100px; left: 16px; z-index: 9999;
+      background: var(--primary); color: #fff; padding: 10px 18px;
+      border-radius: var(--radius-sm); font-weight: 600; transition: top .2s;
+    }
+    .skip-link:focus { top: 16px; outline: 3px solid var(--t1); outline-offset: 2px; }
+
+    /* ── Focus ring (WCAG 2.4.7) ── */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+    /* ── Layout ── */
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar); background: var(--bg2); border-right: 1px solid var(--border);
+      padding: 28px 18px; display: flex; flex-direction: column;
+      position: fixed; top: 0; bottom: 0; left: 0; z-index: 200;
+      overflow-y: auto; transition: background .3s, border-color .3s;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; user-select: none; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.25rem; box-shadow: 0 4px 12px var(--primary-g);
+      aria-hidden: true;
+    }
+    .logo-text { font-family: var(--font-h); font-size: 1.45rem; font-weight: 800; }
+
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 11px 14px; border: none; border-radius: var(--radius-sm);
+      background: transparent; cursor: pointer; color: var(--t2);
+      font-weight: 500; font-size: 0.92rem; text-align: left;
+      transition: background .18s, color .18s; position: relative;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
+    .nav-btn[aria-current="page"] {
+      background: var(--primary-g); color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-btn[aria-current="page"]::before {
+      content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+      width: 3px; background: var(--primary); border-radius: 0 3px 3px 0;
+    }
+    .nav-btn svg { flex-shrink: 0; }
+
+    .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .theme-btn {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); background: transparent; cursor: pointer;
+      color: var(--t2); display: flex; align-items: center; gap: 9px;
+      font-size: 0.85rem; font-weight: 500; transition: background .18s, color .18s, border-color .18s;
+    }
+    .theme-btn:hover { background: rgba(255,255,255,0.05); color: var(--t1); border-color: var(--border2); }
+    .footer-note { font-size: 0.7rem; color: var(--t3); text-align: center; }
+
+    /* ── Main content ── */
+    .main { flex: 1; margin-left: var(--sidebar); padding: 36px 40px; min-height: 100vh; }
+    .page { max-width: 1100px; margin: 0 auto; animation: fadeUp .3s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+    .page-sub { color: var(--t2); font-size: 0.95rem; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);
+      backdrop-filter: blur(14px); transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow), 0 0 0 1px var(--border2); }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .card-sub { font-size: 0.82rem; color: var(--t2); margin-bottom: 18px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 22px; border-radius: var(--radius-sm); font-weight: 600;
+      cursor: pointer; border: none; font-size: 0.9rem; transition: all .18s;
+      white-space: nowrap; line-height: 1;
+    }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-h); box-shadow: 0 0 18px var(--primary-g); }
+    .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--t1); }
+    .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.10); border-color: var(--border2); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
+    .btn-sm { padding: 7px 14px; font-size: 0.82rem; border-radius: 6px; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; margin-bottom: 6px; font-size: 0.87rem; font-weight: 600; color: var(--t2); }
+    .form-input, .form-select {
+      width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); background: rgba(0,0,0,0.18);
+      color: var(--t1); font-size: 0.95rem; transition: border-color .2s, box-shadow .2s;
+    }
+    [data-theme="light"] .form-input,
+    [data-theme="light"] .form-select { background: rgba(0,0,0,0.04); }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-g); }
+    .form-input.invalid { border-color: var(--danger); }
+    .field-error { color: var(--danger); font-size: 0.78rem; margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+
+    /* ── Grid helpers ── */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .stack { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Toast ── */
+    #toast-area { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 13px 16px; min-width: 260px; max-width: 360px;
+      display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
+      animation: slideIn .3s cubic-bezier(.16,1,.3,1); pointer-events: all;
+      font-size: 0.9rem;
+    }
+    .toast.success { border-left: 4px solid var(--primary); }
+    .toast.info    { border-left: 4px solid var(--info); }
+    .toast.warning { border-left: 4px solid var(--warn); }
+    .toast.error   { border-left: 4px solid var(--danger); }
+    .toast-msg { flex: 1; }
+    .toast-close { cursor: pointer; color: var(--t3); font-size: 1.2rem; line-height: 1; background: none; border: none; padding: 0; }
+    .toast-close:hover { color: var(--t1); }
+    @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(6px); z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 32px; max-width: 540px; width: 100%;
+      box-shadow: var(--shadow); position: relative;
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+    @keyframes popIn { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 22px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px; background: none; border: none;
+      cursor: pointer; color: var(--t3); font-size: 1.4rem; line-height: 1; padding: 4px;
+      border-radius: 4px; transition: color .15s;
+    }
+    .modal-close:hover { color: var(--t1); }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+    .badge-green  { background: var(--primary-g); color: var(--primary); }
+    .badge-blue   { background: var(--accent-g);  color: var(--accent); }
+    .badge-warn   { background: var(--warn-g);    color: var(--warn); }
+    .badge-red    { background: var(--danger-g);  color: var(--danger); }
+    .badge-gray   { background: rgba(255,255,255,0.05); color: var(--t3); }
+
+    /* ── Progress bar ── */
+    .progress-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+    [data-theme="light"] .progress-track { background: rgba(0,0,0,0.06); }
+    .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width .6s ease; min-width: 2px; }
+
+    /* ── Step indicators ── */
+    .steps { display: flex; align-items: center; margin-bottom: 32px; }
+    .step-dot {
+      width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.88rem; flex-shrink: 0;
+      background: var(--bg2); color: var(--t3); transition: all .25s;
+    }
+    .step-dot.active { border-color: var(--primary); color: var(--primary); background: var(--primary-g); box-shadow: 0 0 14px var(--primary-g); }
+    .step-dot.done   { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .step-line { flex: 1; height: 2px; background: var(--border); transition: background .25s; }
+    .step-line.done { background: var(--primary); }
+
+    /* ── Metric card ── */
+    .metric-num { font-family: var(--font-h); font-size: 2.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .metric-unit { font-size: 0.95rem; color: var(--t2); font-weight: 400; }
+
+    /* ── Recommendation card ── */
+    .rec-card { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 20px; }
+    .rec-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+    .rec-icon.transport { background: var(--accent-g); }
+    .rec-icon.energy    { background: var(--warn-g); }
+    .rec-icon.lifestyle { background: var(--primary-g); }
+    .rec-name { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .rec-desc { font-size: 0.87rem; color: var(--t2); margin-bottom: 8px; }
+    .rec-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .rec-saving { font-size: 0.84rem; font-weight: 700; color: var(--primary); }
+
+    /* ── Achievement cards ── */
+    .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; margin-top: 16px; }
+    .ach-card {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 18px 12px; border-radius: var(--radius); border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02); transition: all .2s; cursor: default;
+    }
+    .ach-card.unlocked { background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(16,185,129,.08)); border-color: rgba(245,158,11,.28); }
+    .ach-icon { font-size: 2rem; margin-bottom: 8px; filter: grayscale(1) opacity(.3); transition: filter .3s; }
+    .ach-card.unlocked .ach-icon { filter: none; }
+    .ach-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+    .ach-desc { font-size: 0.7rem; color: var(--t2); line-height: 1.4; }
+    .ach-label { font-size: 0.64rem; margin-top: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .ach-label.locked   { color: var(--t3); }
+    .ach-label.unlocked { color: var(--primary); }
+
+    /* ── Insight items ── */
+    .insight-item {
+      border-left: 3px solid var(--primary); padding: 16px 20px;
+      background: rgba(255,255,255,0.02); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 14px;
+    }
+    [data-theme="light"] .insight-item { background: rgba(0,0,0,0.02); }
+    .insight-q { font-weight: 700; margin-bottom: 8px; font-size: 0.97rem; }
+    .insight-a { font-size: 0.88rem; color: var(--t2); line-height: 1.75; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th { padding: 10px 12px; text-align: left; color: var(--t3); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: .04em; }
+    tbody td { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--t1); }
+    [data-theme="light"] tbody td { border-bottom-color: rgba(0,0,0,0.05); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Bar chart ── */
+    .bar-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 130px; padding: 0 2px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+    .bar-value { font-size: 0.66rem; color: var(--t2); font-weight: 600; }
+    .bar-rect { width: 100%; border-radius: 6px 6px 0 0; min-height: 4px; background: linear-gradient(180deg, var(--primary), var(--accent)); cursor: pointer; transition: opacity .2s; }
+    .bar-rect:hover { opacity: .78; }
+    .bar-date { font-size: 0.65rem; color: var(--t3); text-align: center; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 52px 20px; }
+    .empty-icon { font-size: 3rem; margin-bottom: 14px; opacity: .4; }
+    .empty p { color: var(--t2); margin-bottom: 20px; font-size: 0.95rem; }
+
+    /* ── Alert ── */
+    .alert { padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 18px; font-size: 0.9rem; }
+    .alert-info { background: var(--accent-g); border-left: 3px solid var(--accent); color: var(--t1); }
+    .alert-warn { background: var(--warn-g);   border-left: 3px solid var(--warn);   color: var(--t1); }
+
+    /* ── Donut legend ── */
+    .donut-legend { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--t2); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { width: 62px; padding: 18px 10px; overflow: visible; }
+      .logo-text, .nav-btn span, .sidebar-footer .theme-btn span, .footer-note { display: none; }
+      .main { margin-left: 62px; padding: 22px 18px; }
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+      .rec-card { grid-template-columns: 48px 1fr; }
+      .rec-card .rec-action { grid-column: 1/-1; }
+    }
+    @media (max-width: 600px) {
+      .page-title { font-size: 1.6rem; }
+      .metric-num { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Skip to main content (WCAG 2.4.1) -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="app" role="application" aria-label="EcoTrace Carbon Footprint Assistant">
+
+  <!-- ══ Sidebar ══ -->
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="logo" aria-hidden="true">
+      <div class="logo-icon">🌿</div>
+      <span class="logo-text">EcoTrace</span>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Application pages" role="navigation">
+      <button class="nav-btn" id="nav-dashboard"      data-page="dashboard"      aria-current="page" onclick="navigate('dashboard')"      aria-label="Dashboard page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-btn" id="nav-calculator"    data-page="calculator"    onclick="navigate('calculator')"    aria-label="Calculator page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        <span>Calculator</span>
+      </button>
+      <button class="nav-btn" id="nav-recommendations" data-page="recommendations" onclick="navigate('recommendations')" aria-label="Recommendations page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Recommendations</span>
+      </button>
+      <button class="nav-btn" id="nav-goals"        data-page="goals"        onclick="navigate('goals')"        aria-label="Goals and achievements page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Goals</span>
+      </button>
+      <button class="nav-btn" id="nav-insights"     data-page="insights"     onclick="navigate('insights')"     aria-label="Carbon insights page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Insights</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle color theme">
+        <span id="theme-icon" aria-hidden="true">☀️</span>
+        <span id="theme-label">Light Mode</span>
+      </button>
+      <p class="footer-note" aria-label="Copyright">© 2026 EcoTrace</p>
+    </div>
+  </aside>
+
+  <!-- ══ Main ══ -->
+  <main id="main-content" class="main" tabindex="-1" aria-live="polite" aria-atomic="false">
+    <div id="page-root" class="page" role="region" aria-label="Page content"></div>
+  </main>
+</div>
+
+<!-- Toast area (assertive for urgent messages) -->
+<div id="toast-area" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Modal root -->
+<div id="modal-root"></div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════
+   1. CONSTANTS
+════════════════════════════════════════ */
+const STORAGE_KEY = 'ecotrace_v3';
+
+const EF = {
+  car: { PETROL: 0.18, DIESEL: 0.17, HYBRID: 0.10, ELECTRIC: 0.05 },
+  public: 0.035,
+  flight: { short: 150, long: 500 },
+  grid: 0.40,
+  diet: { VEGAN: 125, VEGETARIAN: 140, LOW_MEAT: 210, AVERAGE: 210, HIGH_MEAT: 275 },
+  shopping: { MINIMALIST: 50, AVERAGE: 120, HEAVY: 250 },
+  waste: { LOW: 10, AVERAGE: 30, HIGH: 60 }
+};
+
+const RECS = [
+  { id:'r1', cat:'TRANSPORTATION', icon:'🚲', name:'Switch to Public Transit', desc:'Use trains or buses for commuting twice a week instead of driving.', impact:85, diff:'EASY' },
+  { id:'r2', cat:'TRANSPORTATION', icon:'✈️', name:'Avoid Short-Haul Flights', desc:'Opt for rail travel or virtual meetings instead of frequent short flights.', impact:150, diff:'MEDIUM' },
+  { id:'r3', cat:'TRANSPORTATION', icon:'🔋', name:'Switch to Electric Vehicle', desc:'Transition your car to a hybrid or fully electric model next upgrade cycle.', impact:220, diff:'HARD' },
+  { id:'r4', cat:'ENERGY', icon:'☀️', name:'Switch to Renewable Tariff', desc:'Enroll in a 100% green electricity tariff from your energy supplier.', impact:180, diff:'MEDIUM' },
+  { id:'r5', cat:'ENERGY', icon:'💡', name:'Switch to LED Lighting', desc:'Replace all incandescent bulbs with energy-efficient LED alternatives.', impact:25, diff:'EASY' },
+  { id:'r6', cat:'ENERGY', icon:'🌡️', name:'Optimize Thermostat', desc:'Lower heating 1.5°C in winter and raise AC 1.5°C in summer.', impact:40, diff:'EASY' },
+  { id:'r7', cat:'LIFESTYLE', icon:'🥗', name:'Shift to Plant-Based Diet', desc:'Reduce red meat consumption and shift towards vegetarian meals gradually.', impact:135, diff:'MEDIUM' },
+  { id:'r8', cat:'LIFESTYLE', icon:'♻️', name:'Compost & Recycle Diligently', desc:'Divert organic waste and packaging from landfills via recycling programs.', impact:50, diff:'EASY' },
+  { id:'r9', cat:'LIFESTYLE', icon:'🛍️', name:'Shop Secondhand First', desc:'Buy clothing and electronics used to reduce manufacturing emissions.', impact:75, diff:'MEDIUM' }
+];
+
+const ACH_DEFS = [
+  { id:'first_calc', icon:'🌱', name:'First Footprint', desc:'Completed your first carbon calculation.' },
+  { id:'eco_warrior', icon:'🛡️', name:'Eco Warrior', desc:'Monthly emissions below 600 kg CO₂e.' },
+  { id:'reducer', icon:'📉', name:'Carbon Cutter', desc:'Reduced footprint vs your previous entry.' },
+  { id:'commuter', icon:'🚲', name:'Clean Commuter', desc:'Zero car travel, active public transit.' },
+  { id:'solar', icon:'☀️', name:'Sun Powered', desc:'100% renewable electricity in a calculation.' },
+  { id:'goal_done', icon:'🏆', name:'Goal Getter', desc:'Completed a sustainability goal.' }
+];
+
+/* ════════════════════════════════════════
+   2. STATE
+════════════════════════════════════════ */
+function defaultState() {
+  return {
+    footprints: [],
+    goals: [
+      { id:'g1', desc:'Reduce car travel by 20%', type:'reduction', target:20, current:0, done:false, created:new Date().toISOString() },
+      { id:'g2', desc:'Use public transport 12 times this month', type:'habit', target:12, current:0, done:false, created:new Date().toISOString() }
+    ],
+    achievements: ACH_DEFS.map(a => ({ ...a, unlocked:false, unlockedAt:null })),
+    theme: 'dark'
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const s = JSON.parse(raw);
+    if (!Array.isArray(s.footprints) || !Array.isArray(s.goals) || !Array.isArray(s.achievements)) return defaultState();
+    if (s.achievements.length !== ACH_DEFS.length) {
+      s.achievements = ACH_DEFS.map(a => { const old = s.achievements.find(x => x.id === a.id); return old || { ...a, unlocked:false, unlockedAt:null }; });
+    }
+    return s;
+  } catch (_) { return defaultState(); }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+let state = loadState();
+let currentPage = 'dashboard';
+
+document.documentElement.setAttribute('data-theme', state.theme);
+syncThemeButton();
+
+/* ════════════════════════════════════════
+   3. DOM HELPERS  (no raw innerHTML from user data)
+════════════════════════════════════════ */
+
+/**
+ * Create a DOM element.
+ * @param {string} tag
+ * @param {Object} [opts]   - { cls, id, html, style(obj), attrs(obj), on(obj) }
+ * @param {...(Node|string)} [children]
+ */
+function mk(tag, opts, ...children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.cls)   e.className = opts.cls;
+    if (opts.id)    e.id = opts.id;
+    if (opts.html)  e.innerHTML = opts.html;  // only used for static SVG/table markup
+    if (opts.style && typeof opts.style === 'object') Object.assign(e.style, opts.style);
+    if (opts.attrs && typeof opts.attrs === 'object') {
+      for (const [k, v] of Object.entries(opts.attrs)) e.setAttribute(k, v);
+    }
+    if (opts.on && typeof opts.on === 'object') {
+      for (const [ev, fn] of Object.entries(opts.on)) e.addEventListener(ev, fn);
+    }
+    if (opts.text != null) e.textContent = String(opts.text);
+  }
+  for (const child of children) {
+    if (child == null || child === false) continue;
+    e.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+  }
+  return e;
+}
+
+function div(opts, ...children) { return mk('div', opts, ...children); }
+function span(opts, ...children) { return mk('span', opts, ...children); }
+function p(opts, ...children) { return mk('p', opts, ...children); }
+function h1(text, cls) { return mk('h1', { text, cls }); }
+function h2(text, cls) { return mk('h2', { text, cls }); }
+function h3(text, cls) { return mk('h3', { text, cls }); }
+function h4(text, cls) { return mk('h4', { text, cls }); }
+
+function btn(label, cls, onClick, extra) {
+  const b = mk('button', { cls: `btn ${cls}`, on: { click: onClick }, ...extra });
+  b.textContent = label;
+  return b;
+}
+
+function badge(text, cls) { return mk('span', { cls: `badge ${cls}`, text }); }
+
+function card(children, extraClass, extraStyle) {
+  const cls = extraClass ? `card ${extraClass}` : 'card';
+  const c = div({ cls, style: extraStyle || null });
+  (Array.isArray(children) ? children : [children]).forEach(child => {
+    if (child) c.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+  });
+  return c;
+}
+
+function labeledField(labelText, inputEl, errorId) {
+  const g = div({ cls: 'form-group' });
+  if (labelText) {
+    const lbl = mk('label', { cls: 'form-label' }, labelText);
+    if (inputEl.id) lbl.setAttribute('for', inputEl.id);
+    g.appendChild(lbl);
+  }
+  g.appendChild(inputEl);
+  if (errorId) {
+    const err = span({ cls: 'field-error', id: errorId });
+    g.appendChild(err);
+  }
+  return g;
+}
+
+function textInput(id, type, placeholder, value, onInput) {
+  const inp = mk('input', { cls: 'form-input', attrs: { id, type: type||'text', placeholder: placeholder||'', min:'0', value: value||'' } });
+  inp.addEventListener('input', e => { inp.classList.remove('invalid'); onInput(e.target.value); });
+  return inp;
+}
+
+function selectInput(id, options, selected, onChange) {
+  const sel = mk('select', { cls: 'form-select', attrs: { id } });
+  options.forEach(([val, label]) => {
+    const o = mk('option', { attrs: { value: val }, text: label });
+    if (val === selected) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', e => onChange(e.target.value));
+  return sel;
+}
+
+/* ════════════════════════════════════════
+   4. ROUTING
+════════════════════════════════════════ */
+const PAGES = {
+  dashboard:       renderDashboard,
+  calculator:      renderCalculator,
+  recommendations: renderRecommendations,
+  goals:           renderGoals,
+  insights:        renderInsights
+};
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const isActive = b.dataset.page === page;
+    b.setAttribute('aria-current', isActive ? 'page' : 'false');
+  });
+  renderPage();
+  document.getElementById('main-content').focus();
+}
+
+function renderPage() {
+  const root = document.getElementById('page-root');
+  root.innerHTML = '';
+  const fn = PAGES[currentPage] || renderDashboard;
+  try {
+    root.appendChild(fn());
+  } catch (err) {
+    console.error(err);
+    root.appendChild(
+      div({ cls: 'card', style: { borderColor:'var(--danger)' } },
+        h3('Error loading page', null),
+        p({ cls: 'insight-a', style: { color:'var(--danger)', marginTop:'8px' }, text: err.message })
+      )
+    );
+  }
+}
+
+/* ════════════════════════════════════════
+   5. TOAST
+════════════════════════════════════════ */
+function toast(message, type) {
+  type = type || 'success';
+  const area = document.getElementById('toast-area');
+  const closeBtn = mk('button', { cls: 'toast-close', attrs: { 'aria-label': 'Dismiss notification' }, html: '&times;' });
+  const t = div({ cls: `toast ${type}`, attrs: { role:'alert' } },
+    span({ cls: 'toast-msg', text: message }),
+    closeBtn
+  );
+  closeBtn.addEventListener('click', () => t.remove());
+  area.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0'; t.style.transform = 'translateX(110%)'; t.style.transition = '.4s';
+    setTimeout(() => t.remove(), 400);
+  }, 3800);
+}
+
+/* ════════════════════════════════════════
+   6. THEME
+════════════════════════════════════════ */
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', state.theme);
+  saveState();
+  syncThemeButton();
+  toast('Switched to ' + state.theme + ' mode', 'info');
+}
+
+function syncThemeButton() {
+  const icon  = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  const btn_  = document.getElementById('theme-btn');
+  if (icon)  icon.textContent  = state.theme === 'dark' ? '☀️' : '🌙';
+  if (label) label.textContent = state.theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+  if (btn_)  btn_.setAttribute('aria-label', 'Switch to ' + (state.theme === 'dark' ? 'light' : 'dark') + ' mode');
+}
+
+/* ════════════════════════════════════════
+   7. CALCULATIONS
+════════════════════════════════════════ */
+function calcTransport(d) {
+  const factor = EF.car[d.fuelType] || 0.18;
+  const car    = (d.carDist || 0) * factor;
+  const pub    = (d.pubDist || 0) * EF.public;
+  const sFlght = ((d.flightsShort || 0) * EF.flight.short) / 12;
+  const lFlght = ((d.flightsLong  || 0) * EF.flight.long)  / 12;
+  return +((car + pub + sFlght + lFlght).toFixed(2));
+}
+
+function calcEnergy(d) {
+  const offset = Math.min(100, Math.max(0, d.renewable || 0)) / 100;
+  return +((d.kwh || 0) * EF.grid * (1 - offset)).toFixed(2);
+}
+
+function calcLifestyle(d) {
+  return +((EF.diet[d.diet] || 210) + (EF.shopping[d.shopping] || 120) + (EF.waste[d.waste] || 30)).toFixed(2);
+}
+
+/* ════════════════════════════════════════
+   8. ACHIEVEMENTS
+════════════════════════════════════════ */
+function unlockAch(id) {
+  const a = state.achievements.find(x => x.id === id);
+  if (a && !a.unlocked) {
+    a.unlocked = true;
+    a.unlockedAt = new Date().toISOString();
+    saveState();
+    toast('🏆 Unlocked: "' + a.name + '"', 'info');
+  }
+}
+
+function checkAchievements() {
+  const fps = state.footprints;
+  if (!fps.length) return;
+  const latest = fps[fps.length - 1];
+  unlockAch('first_calc');
+  if (latest.total < 600) unlockAch('eco_warrior');
+  if (fps.length > 1 && latest.total < fps[fps.length - 2].total) unlockAch('reducer');
+  if (latest.td.carDist === 0 && latest.td.pubDist > 0) unlockAch('commuter');
+  if (latest.ed.renewable === 100 && latest.ed.kwh > 0) unlockAch('solar');
+}
+
+/* ════════════════════════════════════════
+   9. HELPERS
+════════════════════════════════════════ */
+function fmtKg(v) {
+  if (v == null || isNaN(v)) return '0 kg';
+  return v >= 1000 ? (v / 1000).toFixed(2) + ' t CO₂e' : v.toFixed(0) + ' kg CO₂e';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function diffBadge(diff) {
+  const map = { EASY:'badge-green', MEDIUM:'badge-blue', HARD:'badge-warn' };
+  return badge(diff, map[diff] || 'badge-gray');
+}
+
+/* ════════════════════════════════════════
+   10. MODAL
+════════════════════════════════════════ */
+function openModal(titleText, bodyEl) {
+  const overlay = div({ cls: 'modal-overlay', attrs: { role:'dialog', 'aria-modal':'true', 'aria-labelledby':'modal-h' } });
+  const box = div({ cls: 'modal-box' });
+  const closeBtn = mk('button', { cls: 'modal-close', attrs: { 'aria-label':'Close dialog' }, html:'&times;' });
+
+  const doClose = () => { overlay.remove(); };
+  closeBtn.addEventListener('click', doClose);
+  overlay.addEventListener('click', e => { if (e.target === overlay) doClose(); });
+  const escHandler = e => { if (e.key === 'Escape') { doClose(); document.removeEventListener('keydown', escHandler); } };
+  document.addEventListener('keydown', escHandler);
+
+  box.appendChild(closeBtn);
+  box.appendChild(mk('h2', { id:'modal-h', cls:'modal-title', text: titleText }));
+  box.appendChild(bodyEl);
+  overlay.appendChild(box);
+  document.getElementById('modal-root').appendChild(overlay);
+
+  setTimeout(() => { const first = box.querySelector('input,select,button'); if (first) first.focus(); }, 60);
+  return { close: doClose };
+}
+
+/* ════════════════════════════════════════
+   11. CHARTS
+════════════════════════════════════════ */
+function buildDonut(fp) {
+  const total = fp.total || 1;
+  const segments = [
+    { label:'Transport', val:fp.transport, color:'#06b6d4' },
+    { label:'Energy',    val:fp.energy,    color:'#f59e0b' },
+    { label:'Lifestyle', val:fp.lifestyle,  color:'#10b981' }
+  ];
+  const SIZE=180, SW=22, R=(SIZE-SW)/2, CX=SIZE/2, CY=SIZE/2;
+  const CIRC = 2 * Math.PI * R;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + SIZE + ' ' + SIZE);
+  svg.setAttribute('width', SIZE);
+  svg.setAttribute('height', SIZE);
+  svg.setAttribute('style', 'display:block;margin:0 auto');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Donut chart: Transport ' + fmtKg(fp.transport) + ', Energy ' + fmtKg(fp.energy) + ', Lifestyle ' + fmtKg(fp.lifestyle));
+
+  // Track circle
+  const track = document.createElementNS(ns, 'circle');
+  track.setAttribute('cx', CX); track.setAttribute('cy', CY); track.setAttribute('r', R);
+  track.setAttribute('fill', 'transparent'); track.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+  track.setAttribute('stroke-width', SW);
+  svg.appendChild(track);
+
+  let offset = 0;
+  segments.forEach(seg => {
+    if (seg.val <= 0) return;
+    const pct = seg.val / total;
+    const dash = CIRC * pct;
+    const c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', CX); c.setAttribute('cy', CY); c.setAttribute('r', R);
+    c.setAttribute('fill', 'transparent'); c.setAttribute('stroke', seg.color);
+    c.setAttribute('stroke-width', SW);
+    c.setAttribute('stroke-dasharray', dash + ' ' + (CIRC - dash));
+    c.setAttribute('stroke-dashoffset', -(CIRC * offset));
+    c.setAttribute('transform', 'rotate(-90 ' + CX + ' ' + CY + ')');
+    c.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(c);
+    offset += pct;
+  });
+
+  // Center text
+  const gLabel = document.createElementNS(ns, 'text');
+  gLabel.setAttribute('x', CX); gLabel.setAttribute('y', CY - 9);
+  gLabel.setAttribute('text-anchor', 'middle'); gLabel.setAttribute('fill', 'var(--t2)');
+  gLabel.setAttribute('font-size', '9'); gLabel.textContent = 'TOTAL';
+  svg.appendChild(gLabel);
+
+  const gVal = document.createElementNS(ns, 'text');
+  gVal.setAttribute('x', CX); gVal.setAttribute('y', CY + 9);
+  gVal.setAttribute('text-anchor', 'middle'); gVal.setAttribute('fill', 'var(--t1)');
+  gVal.setAttribute('font-size', '14'); gVal.setAttribute('font-weight', '800');
+  gVal.textContent = fmtKg(fp.total).replace(' CO₂e','');
+  svg.appendChild(gVal);
+
+  const wrap = div({ cls: '' });
+  wrap.appendChild(svg);
+
+  const legend = div({ cls: 'donut-legend' });
+  segments.forEach(seg => {
+    const item = div({ cls: 'legend-item' },
+      div({ cls: 'legend-dot', style: { background: seg.color } }),
+      span({ text: seg.label + ': ' + fmtKg(seg.val) })
+    );
+    legend.appendChild(item);
+  });
+  wrap.appendChild(legend);
+  return wrap;
+}
+
+function buildBarChart(fps) {
+  if (!fps.length) return p({ cls: 'card-sub', text: 'No trend data yet.' });
+  const max = Math.max(...fps.map(f => f.total), 1);
+  const wrap = div({ cls: 'bar-chart-wrap', attrs: { role:'img', 'aria-label':'Bar chart showing emissions trend' } });
+  fps.forEach(fp => {
+    const heightPct = Math.max(4, (fp.total / max) * 100);
+    const col = div({ cls: 'bar-col' });
+    col.appendChild(span({ cls: 'bar-value', text: fmtKg(fp.total).replace(' CO₂e','') }));
+    const bar = div({ cls: 'bar-rect', style: { height: heightPct + '%' }, attrs: { role:'presentation', title: fmtDate(fp.date) + ': ' + fmtKg(fp.total) } });
+    col.appendChild(bar);
+    col.appendChild(span({ cls: 'bar-date', text: fmtDate(fp.date).replace(/,\s*\d{4}/, '') }));
+    wrap.appendChild(col);
+  });
+  return wrap;
+}
+
+/* ════════════════════════════════════════
+   12. PAGE — DASHBOARD
+════════════════════════════════════════ */
+function renderDashboard() {
+  const wrap = div({ cls: 'page' });
+  wrap.appendChild(div({ cls: 'page-header' }, h1('Sustainability Dashboard', 'page-title'), p({ cls:'page-sub', text:'Track your carbon footprint, analyze trends, and monitor progress.' })));
+
+  const fps = state.footprints;
+
+  if (!fps.length) {
+    wrap.appendChild(card([
+      div({ cls:'empty' },
+        div({ cls:'empty-icon', text:'🌍' }),
+        p({ text:'No footprint data yet. Start by calculating your first carbon entry.' }),
+        btn('Calculate My Footprint', 'btn-primary', () => navigate('calculator'))
+      )
+    ]));
+    return wrap;
+  }
+
+  const latest = fps[fps.length - 1];
+  const prev   = fps.length > 1 ? fps[fps.length - 2] : null;
+
+  // ── Metric cards ──
+  const metricsRow = div({ cls:'grid3', style:{ marginBottom:'22px' } });
+
+  // Card 1: Footprint
+  const c1 = card([
+    p({ cls:'card-sub', text:'Monthly Footprint' }),
+    div({ style:{ margin:'6px 0 10px' } },
+      span({ cls:'metric-num', text: fps.length ? fmtKg(latest.total).replace(' CO₂e','') : '—' }),
+      span({ cls:'metric-unit', text:' kg CO₂e/mo' })
+    ),
+    (() => {
+      if (!prev) return p({ cls:'card-sub', text:'First entry — baseline set ✅' });
+      const pct = ((prev.total - latest.total) / prev.total * 100).toFixed(1);
+      const reduced = parseFloat(pct) >= 0;
+      return badge((reduced ? '▼ ' : '▲ ') + Math.abs(pct) + '% vs last entry', reduced ? 'badge-green' : 'badge-red');
+    })()
+  ]);
+  metricsRow.appendChild(c1);
+
+  // Card 2: vs National Avg
+  const natAvg = 1300;
+  const pctAvg = Math.min(150, Math.round((latest.total / natAvg) * 100));
+  const underAvg = latest.total < natAvg;
+  const c2 = card([
+    p({ cls:'card-sub', text:'vs National Avg (1,300 kg/mo)' }),
+    div({ style:{ margin:'6px 0 10px' } },
+      span({ cls:'metric-num', style:{ color: underAvg ? 'var(--primary)' : 'var(--danger)' }, text: pctAvg + '%' })
+    ),
+    (() => {
+      const track = div({ cls:'progress-track' });
+      const fill  = div({ cls:'progress-fill', style:{ width: Math.min(100,pctAvg)+'%', background: underAvg ? 'var(--primary)' : 'var(--danger)' } });
+      track.appendChild(fill);
+      return track;
+    })(),
+    p({ style:{ fontSize:'.78rem', color:'var(--t2)', marginTop:'8px' }, text: underAvg ? '✅ Below average — great work!' : '⚠️ Above average. Check recommendations.' })
+  ]);
+  metricsRow.appendChild(c2);
+
+  // Card 3: Entries
+  const c3 = card([
+    p({ cls:'card-sub', text:'Total Calculations' }),
+    div({ style:{ margin:'6px 0 10px' } }, span({ cls:'metric-num', text: String(fps.length) })),
+    p({ style:{ fontSize:'.82rem', color:'var(--t2)' }, text:'Last: ' + fmtDate(latest.date) })
+  ]);
+  metricsRow.appendChild(c3);
+  wrap.appendChild(metricsRow);
+
+  // ── Charts ──
+  const chartsRow = div({ cls:'grid2', style:{ marginBottom:'22px' } });
+
+  const donutCard = card([
+    h3('Emissions Breakdown', 'card-title'),
+    p({ cls:'card-sub', text:'Share by category this month' }),
+    buildDonut(latest)
+  ]);
+  chartsRow.appendChild(donutCard);
+
+  const barCard = card([
+    h3('Emissions Trend', 'card-title'),
+    p({ cls:'card-sub', text:'Last 6 calculations' }),
+    buildBarChart(fps.slice(-6))
+  ]);
+  chartsRow.appendChild(barCard);
+  wrap.appendChild(chartsRow);
+
+  // ── Category breakdown ──
+  const bdCard = card([
+    h3('Category Detail', 'card-title'),
+    p({ cls:'card-sub', text:'Where your emissions come from' }),
+    (() => {
+      const g = div({ cls:'grid3' });
+      [
+        { label:'Transportation', val:latest.transport, icon:'🚗', color:'var(--accent)' },
+        { label:'Energy',         val:latest.energy,    icon:'⚡', color:'var(--warn)' },
+        { label:'Lifestyle',      val:latest.lifestyle,  icon:'🥗', color:'var(--primary)' }
+      ].forEach(({ label, val, icon, color }) => {
+        const pct2 = latest.total > 0 ? Math.round(val / latest.total * 100) : 0;
+        const track = div({ cls:'progress-track', style:{marginTop:'8px'} });
+        const fill  = div({ cls:'progress-fill', style:{ width:pct2+'%', background:color } });
+        track.appendChild(fill);
+        const cc = div({
+          style:{ textAlign:'center', padding:'16px', background:'rgba(255,255,255,0.02)', borderRadius:'10px', border:'1px solid var(--border)' }
+        },
+          div({ style:{ fontSize:'2rem', marginBottom:'8px' }, text:icon }),
+          div({ style:{ fontSize:'1.5rem', fontWeight:'800', color, fontFamily:'var(--font-h)' }, text:fmtKg(val).replace(' CO₂e','') }),
+          div({ style:{ fontSize:'.78rem', color:'var(--t2)', marginTop:'4px' }, text:label }),
+          track
+        );
+        g.appendChild(cc);
+      });
+      return g;
+    })()
+  ], null, { marginBottom:'22px' });
+  wrap.appendChild(bdCard);
+
+  // ── History table ──
+  const histCard = card([
+    h3('Calculation History', 'card-title'),
+    (() => {
+      const table = mk('table', { attrs:{ role:'table', 'aria-label':'Footprint history' } });
+      table.innerHTML = '<thead><tr><th scope="col">Date</th><th scope="col">Transport</th><th scope="col">Energy</th><th scope="col">Lifestyle</th><th scope="col">Total</th><th scope="col">Action</th></tr></thead>';
+      const tbody = mk('tbody');
+      [...fps].reverse().forEach(fp => {
+        const tr = mk('tr');
+        [fmtDate(fp.date), fmtKg(fp.transport), fmtKg(fp.energy), fmtKg(fp.lifestyle)].forEach(txt => {
+          tr.appendChild(mk('td', { text: txt }));
+        });
+        tr.appendChild(mk('td', { style:{fontWeight:'700'}, text: fmtKg(fp.total) }));
+        const actionTd = mk('td');
+        actionTd.appendChild(btn('Delete', 'btn-danger btn-sm', () => {
+          if (!confirm('Delete this entry?')) return;
+          state.footprints = state.footprints.filter(f => f.id !== fp.id);
+          saveState();
+          toast('Entry deleted', 'warning');
+          renderPage();
+        }, { attrs:{ 'aria-label':'Delete entry from ' + fmtDate(fp.date) } }));
+        tr.appendChild(actionTd);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    })()
+  ]);
+  wrap.appendChild(histCard);
+
+  return wrap;
+}
+
+/* ════════════════════════════════════════
+   13. PAGE — CALCULATOR
+════════════════════════════════════════ */
+function renderCalculator() {
+  const wrap = div({ cls:'page' });
+  wrap.appendChild(div({ cls:'page-header' }, h1('Carbon Footprint Calculator','page-title'), p({ cls:'page-sub', text:'Enter your monthly activity data to estimate your CO₂e emissions.' })));
+
+  let step = 1;
+  const fd = { carDist:'', fuelType:'PETROL', pubDist:'', flightsShort:'', flightsLong:'', kwh:'', renewable:'', diet:'AVERAGE', shopping:'AVERAGE', waste:'AVERAGE' };
+
+  // Step indicator
+  const stepsEl = div({ cls:'steps', attrs:{ role:'list', 'aria-label':'Form steps' } });
+  const dots = [];
+  const lines = [];
+  [1,2,3].forEach((n, i) => {
+    const d = div({ cls:'step-dot active', attrs:{ role:'listitem', 'aria-label':'Step ' + n } }, String(n));
+    dots.push(d);
+    stepsEl.appendChild(d);
+    if (n < 3) { const line = div({ cls:'step-line' }); lines.push(line); stepsEl.appendChild(line); }
+  });
+  wrap.appendChild(stepsEl);
+
+  const sectionWrap = div({});
+  wrap.appendChild(sectionWrap);
+
+  const navRow = div({ style:{ display:'flex', justifyContent:'space-between', marginTop:'22px' } });
+  const backBtn = btn('← Back', 'btn-secondary', () => changeStep(-1), { attrs:{ 'aria-label':'Go to previous step' } });
+  const nextBtn = btn('Next Step →', 'btn-primary', () => changeStep(1), { attrs:{ 'aria-label':'Go to next step' } });
+  backBtn.style.visibility = 'hidden';
+  navRow.appendChild(backBtn);
+  navRow.appendChild(nextBtn);
+  wrap.appendChild(navRow);
+
+  function updateStepUI() {
+    dots.forEach((d, i) => {
+      const n = i + 1;
+      d.className = 'step-dot';
+      if (n < step)      { d.className = 'step-dot done';   d.textContent = '✓'; }
+      else if (n === step){ d.className = 'step-dot active'; d.textContent = String(n); }
+      else               { d.textContent = String(n); }
+    });
+    lines.forEach((l, i) => { l.className = 'step-line' + (i + 1 < step ? ' done' : ''); });
+    backBtn.style.visibility = step === 1 ? 'hidden' : 'visible';
+    nextBtn.textContent = step === 3 ? '✅ Submit Calculation' : 'Next Step →';
+    nextBtn.setAttribute('aria-label', step === 3 ? 'Submit the calculation' : 'Go to next step');
+    renderStep();
+  }
+
+  function renderStep() {
+    sectionWrap.innerHTML = '';
+    if (step === 1) sectionWrap.appendChild(buildStep1());
+    if (step === 2) sectionWrap.appendChild(buildStep2());
+    if (step === 3) sectionWrap.appendChild(buildStep3());
+  }
+
+  function buildStep1() {
+    const c = card([
+      h3('🚗 Transportation', 'card-title'),
+      p({ cls:'card-sub', text:'Enter your monthly travel activity. Leave fields blank if not applicable.' }),
+      div({ cls:'grid2' },
+        labeledField('Car Distance (km/month)', textInput('f-carDist','number','e.g. 500', fd.carDist, v => fd.carDist = v)),
+        labeledField('Car Fuel Type', selectInput('f-fuel', [['PETROL','Petrol/Gas'],['DIESEL','Diesel'],['HYBRID','Hybrid'],['ELECTRIC','Electric (EV)']], fd.fuelType, v => fd.fuelType = v))
+      ),
+      labeledField('Public Transport Distance (km/month)', textInput('f-pubDist','number','e.g. 200', fd.pubDist, v => fd.pubDist = v)),
+      div({ cls:'grid2' },
+        labeledField('Short-Haul Flights/year (< 3 hrs)', textInput('f-fs','number','e.g. 2', fd.flightsShort, v => fd.flightsShort = v)),
+        labeledField('Long-Haul Flights/year (≥ 3 hrs)',  textInput('f-fl','number','e.g. 1', fd.flightsLong,  v => fd.flightsLong = v))
+      )
+    ]);
+    return c;
+  }
+
+  function buildStep2() {
+    return card([
+      h3('⚡ Home Energy', 'card-title'),
+      p({ cls:'card-sub', text:'Enter your monthly household energy consumption.' }),
+      labeledField('Monthly Electricity (kWh)', textInput('f-kwh','number','e.g. 350', fd.kwh, v => fd.kwh = v)),
+      labeledField('Renewable Energy Share (%)', textInput('f-ren','number','0 – 100', fd.renewable, v => fd.renewable = v)),
+      div({ cls:'alert alert-info', text:'💡 A typical household uses 200–500 kWh/month. Check your electricity bill for the exact figure.' })
+    ]);
+  }
+
+  function buildStep3() {
+    return card([
+      h3('🌿 Lifestyle', 'card-title'),
+      p({ cls:'card-sub', text:'Select the options that best describe your typical habits.' }),
+      labeledField('Primary Diet', selectInput('f-diet',[['VEGAN','Vegan'],['VEGETARIAN','Vegetarian'],['LOW_MEAT','Low Meat / Flexitarian'],['AVERAGE','Average'],['HIGH_MEAT','High Meat']], fd.diet, v => fd.diet = v)),
+      labeledField('Shopping & Consumer Habits', selectInput('f-shop',[['MINIMALIST','Minimalist / Secondhand'],['AVERAGE','Average'],['HEAVY','Heavy Shopper']], fd.shopping, v => fd.shopping = v)),
+      labeledField('Household Waste Generation', selectInput('f-waste',[['LOW','Low (strict recycling/composting)'],['AVERAGE','Average'],['HIGH','High (little to no recycling)']], fd.waste, v => fd.waste = v))
+    ]);
+  }
+
+  function validate(s) {
+    if (s === 1) {
+      if (fd.carDist !== '' && (+fd.carDist < 0 || isNaN(+fd.carDist))) { toast('Car distance must be a non-negative number', 'error'); return false; }
+      if (fd.pubDist !== '' && (+fd.pubDist < 0 || isNaN(+fd.pubDist))) { toast('Public transport distance must be non-negative', 'error'); return false; }
+      if (fd.flightsShort !== '' && (+fd.flightsShort < 0 || !Number.isInteger(+fd.flightsShort))) { toast('Short flights must be a non-negative whole number', 'error'); return false; }
+      if (fd.flightsLong  !== '' && (+fd.flightsLong  < 0 || !Number.isInteger(+fd.flightsLong)))  { toast('Long flights must be a non-negative whole number', 'error'); return false; }
+    }
+    if (s === 2) {
+      if (fd.kwh !== '' && (+fd.kwh < 0 || isNaN(+fd.kwh))) { toast('Electricity usage must be non-negative', 'error'); return false; }
+      if (fd.renewable !== '' && (+fd.renewable < 0 || +fd.renewable > 100)) { toast('Renewable % must be between 0 and 100', 'error'); return false; }
+    }
+    return true;
+  }
+
+  function changeStep(dir) {
+    if (dir === 1 && !validate(step)) return;
+    if (dir === 1 && step === 3) { submitCalc(); return; }
+    step = Math.max(1, Math.min(3, step + dir));
+    updateStepUI();
+  }
+
+  function submitCalc() {
+    const td = { carDist:+fd.carDist||0, fuelType:fd.fuelType, pubDist:+fd.pubDist||0, flightsShort:+fd.flightsShort||0, flightsLong:+fd.flightsLong||0 };
+    const ed = { kwh:+fd.kwh||0, renewable:+fd.renewable||0 };
+    const ld = { diet:fd.diet, shopping:fd.shopping, waste:fd.waste };
+    const transport  = calcTransport(td);
+    const energy     = calcEnergy(ed);
+    const lifestyle  = calcLifestyle(ld);
+    const total      = +(transport + energy + lifestyle).toFixed(2);
+    state.footprints.push({ id:'fp_'+Date.now(), date:new Date().toISOString(), transport, energy, lifestyle, total, td, ed, ld });
+    state.footprints.sort((a,b) => new Date(a.date) - new Date(b.date));
+    checkAchievements();
+    saveState();
+    toast('✅ Footprint saved: ' + fmtKg(total) + '/month', 'success');
+    navigate('recommendations');
+  }
+
+  updateStepUI();
+  return wrap;
+}
+
+/* ════════════════════════════════════════
+   14. PAGE — RECOMMENDATIONS
+════════════════════════════════════════ */
+function renderRecommendations() {
+  const wrap = div({ cls:'page' });
+  wrap.appendChild(div({ cls:'page-header' },
+    h1('Personalized Recommendations', 'page-title'),
+    p({ cls:'page-sub', text:'High-impact actions ranked based on your carbon profile.' })
+  ));
+
+  const fps = state.footprints;
+  let recs = RECS.slice();
+
+  if (fps.length) {
+    const latest = fps[fps.length - 1];
+    const total  = latest.total || 1;
+    const w = { TRANSPORTATION: latest.transport/total, ENERGY: latest.energy/total, LIFESTYLE: latest.lifestyle/total };
+    recs = recs.map(r => ({ ...r, score: r.impact * (1 + (w[r.cat]||0) * 2) })).sort((a,b) => b.score - a.score);
+  } else {
+    recs = recs.slice().sort((a,b) => b.impact - a.impact);
+    wrap.appendChild(div({ cls:'alert alert-info', text:'💡 Complete a calculation first to get recommendations ranked specifically for your carbon profile.' }));
+  }
+
+  const list = div({ cls:'stack' });
+
+  recs.forEach(rec => {
+    const catCls = rec.cat === 'TRANSPORTATION' ? 'transport' : rec.cat === 'ENERGY' ? 'energy' : 'lifestyle';
+    const alreadyGoal = state.goals.some(g => (g.desc||'').includes(rec.name));
+
+    const addBtn = btn(
+      alreadyGoal ? '✓ Scheduled' : '+ Add to Goals',
+      alreadyGoal ? 'btn-secondary btn-sm' : 'btn-primary btn-sm',
+      () => {
+        if (alreadyGoal) return;
+        state.goals.push({ id:'g_'+Date.now(), desc:rec.name+': '+rec.desc, type:'habit', target:8, current:0, done:false, created:new Date().toISOString() });
+        saveState();
+        toast('Goal added: "' + rec.name + '"', 'success');
+        renderPage();
+      },
+      { attrs:{ 'aria-label': (alreadyGoal ? 'Already scheduled: ' : 'Add to goals: ') + rec.name } }
+    );
+    // Button remains enabled; disabling handled via logic
+
+    const recContent = div({},
+      h3(rec.name, 'rec-name'),
+      p({ cls:'rec-desc', text: rec.desc }),
+      div({ cls:'rec-meta' },
+        diffBadge(rec.diff),
+        span({ cls:'rec-saving', text:'saves ~' + rec.impact + ' kg CO₂e/mo' })
+      )
+    );
+
+    const recCard = card([
+      div({ cls:'rec-icon ' + catCls, attrs:{ 'aria-hidden':'true' }, text: rec.icon }),
+      recContent,
+      div({ cls:'rec-action' }, addBtn)
+    ], 'rec-card', { marginBottom:'14px' });
+
+    list.appendChild(recCard);
+  });
+
+  wrap.appendChild(list);
+  return wrap;
+}
+
+/* ════════════════════════════════════════
+   15. PAGE — GOALS
+════════════════════════════════════════ */
+function renderGoals() {
+  const wrap = div({ cls:'page' });
+
+  const headerRow = div({ style:{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'32px', flexWrap:'wrap', gap:'14px' } },
+    div({}, h1('Goals & Achievements', 'page-title'), p({ cls:'page-sub', text:'Set targets, log habits, and unlock milestone badges.' })),
+    btn('+ New Goal', 'btn-primary', openAddGoalModal, { attrs:{ 'aria-label':'Create a new sustainability goal' } })
+  );
+  wrap.appendChild(headerRow);
+
+  wrap.appendChild(h2('Active Goals', 'section-title'));
+
+  if (!state.goals.length) {
+    wrap.appendChild(card([div({ cls:'empty' }, div({ cls:'empty-icon', text:'🎯' }), p({ text:'No goals yet. Add your first sustainability goal above.' }))]));
+  } else {
+    const grid = div({ style:{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:'18px', marginBottom:'36px' } });
+
+    state.goals.forEach(goal => {
+      const desc    = goal.desc || goal.description || 'Unnamed goal';
+      const target  = goal.target || goal.targetValue || 10;
+      const current = +(goal.current || goal.currentValue || 0);
+      const done    = goal.done || goal.isCompleted || false;
+      const pct     = Math.min(100, Math.round(current / target * 100));
+      const type    = goal.type || 'habit';
+
+      const track = div({ cls:'progress-track', style:{marginTop:'10px'} });
+      track.appendChild(div({ cls:'progress-fill', style:{ width: pct+'%' } }));
+
+      const actions = div({ style:{ display:'flex', gap:'8px', marginTop:'14px' } });
+      if (type === 'habit' && !done) {
+        actions.appendChild(btn('+ Log', 'btn-primary btn-sm', () => {
+          const newVal = Math.min(target, current + 1);
+          goal.current = goal.currentValue = newVal;
+          if (newVal >= target) { goal.done = goal.isCompleted = true; unlockAch('goal_done'); }
+          saveState(); toast('Habit logged! (' + newVal + '/' + target + ')', 'success'); renderPage();
+        }, { attrs:{ 'aria-label':'Log one habit completion for: ' + desc } }));
+      }
+      actions.appendChild(btn('Delete', 'btn-secondary btn-sm', () => {
+        if (!confirm('Delete this goal?')) return;
+        state.goals = state.goals.filter(g => g.id !== goal.id);
+        saveState(); toast('Goal deleted', 'warning'); renderPage();
+      }, { attrs:{ 'aria-label':'Delete goal: ' + desc } }));
+
+      const goalCard = card([
+        div({ style:{ display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap' } },
+          badge(type === 'reduction' ? 'Reduction' : 'Habit', type === 'reduction' ? 'badge-green' : 'badge-blue'),
+          done ? badge('✓ Complete', 'badge-green') : null
+        ),
+        h4(desc, null),
+        track,
+        div({ style:{ display:'flex', justifyContent:'space-between', fontSize:'.82rem', color:'var(--t2)', marginTop:'8px' } },
+          span({ text: type === 'reduction' ? current.toFixed(1) + '% of ' + target + '% reduction' : current + ' / ' + target + ' times' }),
+          span({ text: pct + '%' })
+        ),
+        actions
+      ]);
+      if (done) goalCard.style.borderColor = 'var(--primary)';
+      grid.appendChild(goalCard);
+    });
+
+    wrap.appendChild(grid);
+  }
+
+  wrap.appendChild(div({ cls:'divider' }));
+  wrap.appendChild(h2('Milestone Achievements', 'section-title'));
+  wrap.appendChild(p({ cls:'page-sub', style:{ marginBottom:'4px' }, text:'Unlock badges as you reduce your carbon footprint and build eco-friendly habits.' }));
+
+  const achGrid = div({ cls:'ach-grid', attrs:{ role:'list', 'aria-label':'Achievement badges' } });
+  state.achievements.forEach(a => {
+    const c = div({ cls: 'ach-card ' + (a.unlocked ? 'unlocked' : ''), attrs:{ role:'listitem', 'aria-label': a.name + (a.unlocked ? ' — unlocked' : ' — locked') } },
+      div({ cls:'ach-icon', attrs:{'aria-hidden':'true'}, text: a.icon }),
+      div({ cls:'ach-name', text: a.name }),
+      div({ cls:'ach-desc', text: a.desc }),
+      div({ cls:'ach-label ' + (a.unlocked ? 'unlocked' : 'locked'), text: a.unlocked ? 'Unlocked ' + fmtDate(a.unlockedAt) : 'Locked' })
+    );
+    achGrid.appendChild(c);
+  });
+  wrap.appendChild(achGrid);
+  return wrap;
+}
+
+function openAddGoalModal() {
+  const descInp = textInput('md-desc', 'text', 'e.g. Cycle to work 3 times a week', '', () => {});
+  descInp.addEventListener('input', e => descInp.value = e.target.value);
+
+  const typeSel = selectInput('md-type', [['habit','Habit Tracker (count)'],['reduction','Carbon Reduction (%)']], 'habit', () => {});
+  const tgtInp  = textInput('md-target', 'number', 'e.g. 10', '10', () => {});
+  tgtInp.addEventListener('input', e => tgtInp.value = e.target.value);
+
+  const errEl = p({ cls:'field-error', style:{ fontSize:'.83rem', marginBottom:'10px' } });
+
+  const body = div({},
+    errEl,
+    labeledField('Goal Description', descInp),
+    labeledField('Goal Type', typeSel),
+    labeledField('Target Value', tgtInp),
+    p({ cls:'card-sub', text:'Habit: number of times to complete (e.g. 12). Reduction: % target (e.g. 15 for 15% reduction).' }),
+    div({ style:{ display:'flex', gap:'10px', justifyContent:'flex-end', marginTop:'22px' } },
+      btn('Cancel', 'btn-secondary', () => modal.close()),
+      btn('Create Goal', 'btn-primary', () => {
+        const desc   = descInp.value.trim();
+        const target = +tgtInp.value;
+        if (!desc)           { errEl.textContent = 'Please enter a description.'; errEl.classList.add('visible'); return; }
+        if (!target || target <= 0) { errEl.textContent = 'Please enter a target value greater than 0.'; errEl.classList.add('visible'); return; }
+        state.goals.push({ id:'g_'+Date.now(), desc, type:typeSel.value, target, current:0, done:false, created:new Date().toISOString() });
+        saveState(); toast('Goal created: "' + desc + '"', 'success');
+        modal.close(); renderPage();
+      }, { attrs:{ 'aria-label':'Save new goal' } })
+    )
+  );
+
+  const modal = openModal('Add New Sustainability Goal', body);
+}
+
+/* ════════════════════════════════════════
+   16. PAGE — INSIGHTS
+════════════════════════════════════════ */
+function renderInsights() {
+  const wrap = div({ cls:'page' });
+  wrap.appendChild(div({ cls:'page-header' },
+    h1('Carbon Impact Insights', 'page-title'),
+    p({ cls:'page-sub', text:'Science-backed facts about carbon emissions and the highest-impact actions you can take.' })
+  ));
+
+  // Q&A section
+  const qas = [
+    ['Why does tracking my carbon footprint matter?',
+     'CO₂ and other greenhouse gases trap heat in the atmosphere, driving climate change. The global average is ~4 tons per person per year. To stay under 1.5°C warming, individual footprints need to drop below 2 tons by 2050. Tracking is the essential first step.'],
+    ['How significant is driving a petrol car?',
+     'A petrol car emits roughly 180 g CO₂ per km. At 10,000 km per year, that\'s 1.8 metric tons of CO₂ — exceeding the entire sustainable annual budget alone. Switching to an EV or public transit makes a large, immediate impact.'],
+    ['How damaging is flying?',
+     'A single long-haul flight can generate 500–1,000 kg CO₂e per passenger. Aircraft emit gases directly at high altitude where warming effects are approximately doubled compared to ground-level emissions.'],
+    ['Does diet really make a significant difference?',
+     'Absolutely. Shifting from a high-meat diet (275 kg CO₂e/month) to fully vegan (125 kg/month) cuts dietary emissions by 55%, saving roughly 1.8 metric tons annually — one of the highest-impact lifestyle changes available.'],
+    ['How does home energy affect my footprint?',
+     'Standard electricity grids produce ~0.40 kg CO₂ per kWh. A household using 350 kWh/month generates 140 kg from electricity alone. Switching to 100% verified renewable energy eliminates this contribution entirely.']
+  ];
+
+  const insightCard = card([
+    h3('Key Questions Answered', 'card-title'),
+    p({ cls:'card-sub', text:'Science-backed answers to common carbon questions.' }),
+    (() => {
+      const container = div({ cls:'stack', attrs:{ role:'list' } });
+      qas.forEach(([q, a]) => {
+        const item = div({ cls:'insight-item', attrs:{ role:'listitem' } },
+          div({ cls:'insight-q', text: q }),
+          div({ cls:'insight-a', text: a })
+        );
+        container.appendChild(item);
+      });
+      return container;
+    })()
+  ], null, { marginBottom:'22px' });
+  wrap.appendChild(insightCard);
+
+  // High-impact table
+  const rows = [
+    ['Switch to 100% renewable electricity',    'Energy',     'Up to 2,000 kg',  'MEDIUM'],
+    ['Adopt vegetarian or vegan diet',           'Lifestyle',  'Up to 1,800 kg',  'MEDIUM'],
+    ['Eliminate one long-haul flight',           'Transport',  '500 – 1,000 kg',  'HARD'],
+    ['Use public transit 2×/week instead of car','Transport',  '~1,000 kg',       'EASY'],
+    ['Shop secondhand for clothing/electronics', 'Lifestyle',  '~900 kg',         'MEDIUM'],
+    ['Install LED lighting throughout home',     'Energy',     '~300 kg',         'EASY'],
+    ['Compost and recycle household waste',      'Lifestyle',  '~240 kg',         'EASY']
+  ];
+
+  const tableCard = card([
+    h3('High-Impact Reduction Levers', 'card-title'),
+    p({ cls:'card-sub', text:'Ranked by estimated annual CO₂e savings.' }),
+    (() => {
+      const table = mk('table', { attrs:{ role:'table', 'aria-label':'High-impact carbon reduction actions' } });
+      const thead = mk('thead');
+      const hrow = mk('tr');
+      ['Action','Category','Est. Annual Saving','Difficulty'].forEach(txt => {
+        hrow.appendChild(mk('th', { attrs:{ scope:'col' }, text: txt }));
+      });
+      thead.appendChild(hrow);
+      table.appendChild(thead);
+
+      const tbody = mk('tbody');
+      rows.forEach(([action, cat, saving, diff]) => {
+        const tr = mk('tr');
+        tr.appendChild(mk('td', { text: action }));
+        tr.appendChild(mk('td', { text: cat }));
+        tr.appendChild(mk('td', { style:{ fontWeight:'700', color:'var(--primary)' }, text: saving }));
+        const diffTd = mk('td');
+        diffTd.appendChild(diffBadge(diff));
+        tr.appendChild(diffTd);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    })()
+  ]);
+  wrap.appendChild(tableCard);
+
+  return wrap;
+}
+
+/* ════════════════════════════════════════
+   17. INIT
+════════════════════════════════════════ */
+navigate('dashboard');
+</script>
+</body>
+</html>

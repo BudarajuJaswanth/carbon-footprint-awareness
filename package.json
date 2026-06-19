@@ -1,0 +1,23 @@
+{
+  "name": "carbon-footprint-reduction-assistant",
+  "version": "1.0.0",
+  "description": "A clean-architecture, accessible, and high-fidelity Carbon Footprint Tracker and Assistant built with vanilla JavaScript, HTML, and CSS.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "python server.py",
+    "test": "python src/tests/run-tests.py",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "carbon-footprint",
+    "sustainability",
+    "green-living",
+    "vanilla-js",
+    "accessibility",
+    "clean-architecture"
+  ],
+  "author": "Senior Software Engineer",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

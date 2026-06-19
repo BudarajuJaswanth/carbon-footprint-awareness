@@ -1,0 +1,17 @@
+{
+  "short_name": "EcoTrace",
+  "name": "EcoTrace Carbon Footprint Reduction Assistant",
+  "description": "Calculate, track, and reduce your carbon footprint.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#090d16",
+  "background_color": "#090d16",
+  "icons": [
+    {
+      "src": "public/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "64x64"
+    }
+  ]
+}
