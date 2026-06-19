@@ -191,7 +191,7 @@
 
     // Render results once suites finished executing
     const suitesContainer = document.getElementById('suites-container');
-    suitesContainer.innerHTML = ''; // Clear loader
+    suitesContainer.replaceChildren(); // Clear loader
 
     let totalTests = 0;
     let totalPassed = 0;
@@ -208,10 +208,15 @@
 
       const suiteTitle = document.createElement('div');
       suiteTitle.className = 'suite-title';
-      suiteTitle.innerHTML = `
-        <span>${suite.name}</span>
-        <span class="suite-stats">${suite.stats.passed}/${suite.stats.total} passed</span>
-      `;
+      
+      const titleName = document.createElement('span');
+      titleName.textContent = suite.name;
+      const titleStats = document.createElement('span');
+      titleStats.className = 'suite-stats';
+      titleStats.textContent = `${suite.stats.passed}/${suite.stats.total} passed`;
+      
+      suiteTitle.appendChild(titleName);
+      suiteTitle.appendChild(titleStats);
       suiteCard.appendChild(suiteTitle);
 
       // Handle full suite-level load errors

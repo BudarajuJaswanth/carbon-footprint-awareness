@@ -342,30 +342,30 @@
     </div>
 
     <nav class="sidebar-nav" aria-label="Application pages" role="navigation">
-      <button class="nav-btn" id="nav-dashboard"      data-page="dashboard"      aria-current="page" onclick="navigate('dashboard')"      aria-label="Dashboard page">
+      <button class="nav-btn" id="nav-dashboard"      data-page="dashboard"      aria-current="page"      aria-label="Dashboard page">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
         <span>Dashboard</span>
       </button>
-      <button class="nav-btn" id="nav-calculator"    data-page="calculator"    onclick="navigate('calculator')"    aria-label="Calculator page">
+      <button class="nav-btn" id="nav-calculator"    data-page="calculator"    aria-label="Calculator page">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
         <span>Calculator</span>
       </button>
-      <button class="nav-btn" id="nav-recommendations" data-page="recommendations" onclick="navigate('recommendations')" aria-label="Recommendations page">
+      <button class="nav-btn" id="nav-recommendations" data-page="recommendations" aria-label="Recommendations page">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Recommendations</span>
       </button>
-      <button class="nav-btn" id="nav-goals"        data-page="goals"        onclick="navigate('goals')"        aria-label="Goals and achievements page">
+      <button class="nav-btn" id="nav-goals"        data-page="goals"        aria-label="Goals and achievements page">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         <span>Goals</span>
       </button>
-      <button class="nav-btn" id="nav-insights"     data-page="insights"     onclick="navigate('insights')"     aria-label="Carbon insights page">
+      <button class="nav-btn" id="nav-insights"     data-page="insights"     aria-label="Carbon insights page">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <span>Insights</span>
       </button>
     </nav>
 
     <div class="sidebar-footer">
-      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle color theme">
+      <button class="theme-btn" id="theme-btn" aria-label="Toggle color theme">
         <span id="theme-icon" aria-hidden="true">☀️</span>
         <span id="theme-label">Light Mode</span>
       </button>
@@ -456,7 +456,7 @@ function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
 }
 
-let state = loadState();
+const state = loadState();
 let currentPage = 'dashboard';
 
 document.documentElement.setAttribute('data-theme', state.theme);
@@ -477,7 +477,6 @@ function mk(tag, opts, ...children) {
   if (opts) {
     if (opts.cls)   e.className = opts.cls;
     if (opts.id)    e.id = opts.id;
-    if (opts.html)  e.innerHTML = opts.html;  // only used for static SVG/table markup
     if (opts.style && typeof opts.style === 'object') Object.assign(e.style, opts.style);
     if (opts.attrs && typeof opts.attrs === 'object') {
       for (const [k, v] of Object.entries(opts.attrs)) e.setAttribute(k, v);
@@ -574,7 +573,7 @@ function navigate(page) {
 
 function renderPage() {
   const root = document.getElementById('page-root');
-  root.innerHTML = '';
+  root.replaceChildren();
   const fn = PAGES[currentPage] || renderDashboard;
   try {
     root.appendChild(fn());
@@ -595,7 +594,7 @@ function renderPage() {
 function toast(message, type) {
   type = type || 'success';
   const area = document.getElementById('toast-area');
-  const closeBtn = mk('button', { cls: 'toast-close', attrs: { 'aria-label': 'Dismiss notification' }, html: '&times;' });
+  const closeBtn = mk('button', { cls: 'toast-close', attrs: { 'aria-label': 'Dismiss notification' }, text: '×' });
   const t = div({ cls: `toast ${type}`, attrs: { role:'alert' } },
     span({ cls: 'toast-msg', text: message }),
     closeBtn
@@ -631,6 +630,16 @@ function syncThemeButton() {
 /* ════════════════════════════════════════
    7. CALCULATIONS
 ════════════════════════════════════════ */
+/**
+ * Calculates transportation emissions based on travel distances and flight data.
+ * @param {Object} d - Transportation data object
+ * @param {number} [d.carDist] - Monthly car travel distance in km
+ * @param {string} [d.fuelType] - Fuel type of the car (e.g. PETROL, DIESEL, ELECTRIC, HYBRID)
+ * @param {number} [d.pubDist] - Monthly public transit distance in km
+ * @param {number} [d.flightsShort] - Short-haul flights per year
+ * @param {number} [d.flightsLong] - Long-haul flights per year
+ * @return {number} Calculated carbon emissions in kg CO2e/month
+ */
 function calcTransport(d) {
   const factor = EF.car[d.fuelType] || 0.18;
   const car    = (d.carDist || 0) * factor;
@@ -640,11 +649,26 @@ function calcTransport(d) {
   return +((car + pub + sFlght + lFlght).toFixed(2));
 }
 
+/**
+ * Calculates home energy emissions based on electricity usage and renewable share.
+ * @param {Object} d - Energy data object
+ * @param {number} [d.kwh] - Monthly electricity usage in kWh
+ * @param {number} [d.renewable] - Percentage of renewable energy share (0 - 100)
+ * @return {number} Calculated carbon emissions in kg CO2e/month
+ */
 function calcEnergy(d) {
   const offset = Math.min(100, Math.max(0, d.renewable || 0)) / 100;
   return +((d.kwh || 0) * EF.grid * (1 - offset)).toFixed(2);
 }
 
+/**
+ * Calculates lifestyle emissions based on diet, shopping, and waste habits.
+ * @param {Object} d - Lifestyle data object
+ * @param {string} [d.diet] - Primary diet type
+ * @param {string} [d.shopping] - Shopping and consumer habits level
+ * @param {string} [d.waste] - Household waste generation level
+ * @return {number} Calculated carbon emissions in kg CO2e/month
+ */
 function calcLifestyle(d) {
   return +((EF.diet[d.diet] || 210) + (EF.shopping[d.shopping] || 120) + (EF.waste[d.waste] || 30)).toFixed(2);
 }
@@ -697,7 +721,7 @@ function diffBadge(diff) {
 function openModal(titleText, bodyEl) {
   const overlay = div({ cls: 'modal-overlay', attrs: { role:'dialog', 'aria-modal':'true', 'aria-labelledby':'modal-h' } });
   const box = div({ cls: 'modal-box' });
-  const closeBtn = mk('button', { cls: 'modal-close', attrs: { 'aria-label':'Close dialog' }, html:'&times;' });
+  const closeBtn = mk('button', { cls: 'modal-close', attrs: { 'aria-label':'Close dialog' }, text: '×' });
 
   const doClose = () => { overlay.remove(); };
   closeBtn.addEventListener('click', doClose);
@@ -929,7 +953,17 @@ function renderDashboard() {
     h3('Calculation History', 'card-title'),
     (() => {
       const table = mk('table', { attrs:{ role:'table', 'aria-label':'Footprint history' } });
-      table.innerHTML = '<thead><tr><th scope="col">Date</th><th scope="col">Transport</th><th scope="col">Energy</th><th scope="col">Lifestyle</th><th scope="col">Total</th><th scope="col">Action</th></tr></thead>';
+      const thead = mk('thead', {},
+        mk('tr', {},
+          mk('th', { attrs:{ scope:'col' } }, 'Date'),
+          mk('th', { attrs:{ scope:'col' } }, 'Transport'),
+          mk('th', { attrs:{ scope:'col' } }, 'Energy'),
+          mk('th', { attrs:{ scope:'col' } }, 'Lifestyle'),
+          mk('th', { attrs:{ scope:'col' } }, 'Total'),
+          mk('th', { attrs:{ scope:'col' } }, 'Action')
+        )
+      );
+      table.appendChild(thead);
       const tbody = mk('tbody');
       [...fps].reverse().forEach(fp => {
         const tr = mk('tr');
@@ -1006,7 +1040,7 @@ function renderCalculator() {
   }
 
   function renderStep() {
-    sectionWrap.innerHTML = '';
+    sectionWrap.replaceChildren();
     if (step === 1) sectionWrap.appendChild(buildStep1());
     if (step === 2) sectionWrap.appendChild(buildStep2());
     if (step === 3) sectionWrap.appendChild(buildStep3());
@@ -1359,7 +1393,39 @@ function renderInsights() {
 /* ════════════════════════════════════════
    17. INIT
 ════════════════════════════════════════ */
-navigate('dashboard');
+/**
+ * Binds page navigation and theme toggling event listeners programmatically
+ * to comply with CSP and eliminate insecure inline HTML event handlers.
+ */
+function bindGlobalEvents() {
+  const dashBtn = document.getElementById('nav-dashboard');
+  if (dashBtn) dashBtn.addEventListener('click', () => navigate('dashboard'));
+
+  const calcBtn = document.getElementById('nav-calculator');
+  if (calcBtn) calcBtn.addEventListener('click', () => navigate('calculator'));
+
+  const recsBtn = document.getElementById('nav-recommendations');
+  if (recsBtn) recsBtn.addEventListener('click', () => navigate('recommendations'));
+
+  const goalsBtn = document.getElementById('nav-goals');
+  if (goalsBtn) goalsBtn.addEventListener('click', () => navigate('goals'));
+
+  const insBtn = document.getElementById('nav-insights');
+  if (insBtn) insBtn.addEventListener('click', () => navigate('insights'));
+
+  const themeBtn = document.getElementById('theme-btn');
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    bindGlobalEvents();
+    navigate('dashboard');
+  });
+} else {
+  bindGlobalEvents();
+  navigate('dashboard');
+}
 </script>
 </body>
 </html>
